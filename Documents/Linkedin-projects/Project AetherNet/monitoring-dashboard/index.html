@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VertexGuard // Enterprise SecOps Command Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      background-color: #06070a;
+      color: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .mono-text {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Custom Neon Glows */
+    .glow-purple {
+      box-shadow: 0 0 25px -5px rgba(147, 51, 234, 0.45);
+    }
+
+    .glow-card {
+      background: rgba(13, 16, 27, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .glow-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(139, 92, 246, 0.3);
+      box-shadow: 0 20px 30px -15px rgba(139, 92, 246, 0.15);
+    }
+
+    /* Tab Views styling */
+    .view-panel {
+      display: none;
+      animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .view-panel.active-view {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .active-tab {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      color: #ffffff !important;
+      box-shadow: 0 4px 15px -3px rgba(124, 58, 237, 0.4);
+    }
+
+    /* Custom Scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 10px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+
+<body class="h-screen flex overflow-hidden">
+
+  <!-- SIDEBAR CONTROLLER -->
+  <div class="w-72 bg-[#090b11] border-r border-slate-900 flex flex-col justify-between p-6 z-20">
+    <div>
+      <!-- Branding Header -->
+      <div class="flex items-center gap-3.5 pb-6 mb-6 border-b border-slate-900">
+        <div
+          class="w-11 h-11 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-purple-500/20 animate-pulse">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-white tracking-wide">VertexGuard Pro</h1>
+          <p class="text-[10px] text-purple-400 font-bold tracking-widest uppercase">Autonomic Cloud Matrix</p>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <p class="text-[10px] font-bold text-slate-500 tracking-widest uppercase px-2 mb-3">Core Monitor</p>
+      <nav class="space-y-1.5" id="sidebarMenu">
+        <button onclick="switchView('overview', this)"
+          class="active-tab w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white font-semibold rounded-xl text-sm text-left transition-all">
+          <i class="fa-solid fa-chart-line text-base"></i> Dynamic Overview
+        </button>
+        <button onclick="switchView('issues', this)"
+          class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white font-semibold rounded-xl text-sm text-left transition-all">
+          <i class="fa-solid fa-triangle-exclamation text-base"></i> Security Incidents
+          <span id="incidentBadge"
+            class="ml-auto bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded-md font-bold transition-all">0</span>
+        </button>
+        <button onclick="switchView('files', this)"
+          class="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white font-semibold rounded-xl text-sm text-left transition-all">
+          <i class="fa-solid fa-square-poll-horizontal text-base"></i> Infrastructure Ledger
+        </button>
+      </nav>
+    </div>
+
+    <!-- Infrastructure Architecture Status -->
+    <div
+      class="p-4 bg-gradient-to-br from-purple-950/20 to-indigo-950/20 rounded-2xl border border-purple-500/10 relative overflow-hidden">
+      <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/5 rounded-full blur-xl"></div>
+      <div class="flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-wider mb-1">
+        <span class="flex h-2 w-2 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+        </span>
+        Boto3 Core Linked
+      </div>
+      <p class="text-[11px] text-slate-400 leading-relaxed">LocalStack environment mapping active across AWS simulation
+        wrappers.</p>
+    </div>
+  </div>
+
+  <!-- MAIN OPERATIONS FRAME -->
+  <div class="flex-1 flex flex-col overflow-y-auto custom-scroll">
+
+    <!-- TOP EXECUTIVE MONITOR BAR -->
+    <header
+      class="h-24 border-b border-slate-900 bg-[#06070a]/70 backdrop-blur-xl flex items-center justify-between px-8 sticky top-0 z-10">
+      <div>
+        <h2 class="text-xl font-bold text-white tracking-tight">Security Command Center</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Real-time AWS perimeter tracking & automated compliance alignment.</p>
+      </div>
+      <div class="flex items-center gap-6">
+        <div id="globalStatus"
+          class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]"></span>
+          SYSTEM BASILINE: COMPLIANT
+        </div>
+        <div class="flex items-center gap-3 border-l border-slate-900 pl-6">
+          <div
+            class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-400 text-sm">
+            AP</div>
+          <div>
+            <span class="text-xs font-semibold text-slate-200 block">Author: Aakash Pandian</span>
+            <span class="text-[10px] text-purple-400 block tracking-wider font-semibold">Role: Cloud Engineer / Platform Architect</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- VIEW CONTAINER 1: OVERVIEW -->
+    <div id="view-overview" class="view-panel active-view p-8 space-y-6">
+
+      <!-- HIGH LEVEL METRICS -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glow-card p-6 rounded-2xl relative overflow-hidden">
+          <p class="text-[11px] font-bold text-slate-400 tracking-widest uppercase">VPC Route Integrity</p>
+          <h3 id="metricIntegrity" class="text-4xl font-extrabold text-white mt-3 tracking-tight transition-all">100%
+          </h3>
+          <div class="mt-2.5 flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+            <i class="fa-solid fa-arrow-up-long"></i> Dynamic Baseline Confirmed
+          </div>
+        </div>
+        <div class="glow-card p-6 rounded-2xl relative overflow-hidden">
+          <p class="text-[11px] font-bold text-slate-400 tracking-widest uppercase">Remediation Response</p>
+          <h3 id="metricLatency" class="text-4xl font-extrabold text-purple-400 mt-3 tracking-tight transition-all">0ms
+          </h3>
+          <div class="mt-2.5 flex items-center gap-1.5 text-xs text-slate-400">
+            <i class="fa-solid fa-clock"></i> Automation Execution Speed
+          </div>
+        </div>
+        <div class="glow-card p-6 rounded-2xl relative overflow-hidden">
+          <p class="text-[11px] font-bold text-slate-400 tracking-widest uppercase">Monitored Endpoints</p>
+          <h3 class="text-4xl font-extrabold text-white mt-3 tracking-tight">142</h3>
+          <div class="mt-2.5 flex items-center gap-1.5 text-xs text-indigo-400 font-semibold">
+            <i class="fa-solid fa-network-wired"></i> Subnets & Route Target Tables
+          </div>
+        </div>
+      </div>
+
+      <!-- CHART AND INTERACTIVE DRIFT INJECTION MATRIX -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Advanced Chart Visualization -->
+        <div class="lg:col-span-2 glow-card p-6 rounded-2xl flex flex-col justify-between h-[340px]">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h3 class="text-sm font-bold text-white">Anomalous Configuration Drift Density</h3>
+              <p class="text-xs text-slate-500">Live analytics telemetry mapping tracking security incidents.</p>
+            </div>
+            <span
+              class="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">Live
+              Feed</span>
+          </div>
+          <div class="flex-1 relative w-full h-full"><canvas id="enterpriseChart"></canvas></div>
+        </div>
+
+        <!-- Simulation Control Center Card -->
+        <div class="glow-card p-6 rounded-2xl flex flex-col justify-between border-l border-t border-purple-500/10">
+          <div>
+            <div class="flex items-center gap-2 mb-2 text-purple-400">
+              <i class="fa-solid fa-bolt-lightning text-xs animate-bounce"></i>
+              <h3 class="text-xs font-bold uppercase tracking-wider">Interactive Deployment Studio</h3>
+            </div>
+            <h4 class="text-base font-bold text-white mb-2">Prove Cloud Architecture Control</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">Demonstrate your custom automated compliance system to
+              recruiters. Simulate network misconfigurations and observe real-time self-healing workflows.</p>
+          </div>
+          <div class="space-y-2.5 mt-4">
+            <button onclick="triggerDriftBreach()"
+              class="w-full bg-rose-950/30 hover:bg-rose-900/40 border border-rose-500/20 text-rose-300 font-semibold text-xs py-3.5 rounded-xl transition-all tracking-wide flex items-center justify-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-xs"></i> 1. Inject Route Table Compromise
+            </button>
+            <button onclick="triggerAutonomicHeal()"
+              class="w-full bg-purple-900/30 hover:bg-purple-800/40 border border-purple-500/30 text-purple-200 font-semibold text-xs py-3.5 rounded-xl transition-all tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20">
+              <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> 2. Run Self-Healing Engine Script
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CORE TERMINAL LOGS -->
+      <div class="glow-card p-6 rounded-2xl">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-terminal text-purple-500"></i> Autonomic Reconciliation Ledger Output
+          </h3>
+          <span class="text-[10px] font-mono text-slate-500">python-engine-stdout</span>
+        </div>
+        <div id="liveLogs"
+          class="bg-[#030406] p-4 rounded-xl font-mono text-xs text-slate-400 space-y-2.5 h-44 overflow-y-auto custom-scroll border border-slate-900/60">
+          <div class="flex items-start gap-2"><span class="text-slate-600">[15:01:12]</span> <span
+              class="text-indigo-400 font-bold">[ENGINE_INIT]</span> Connected to LocalStack core endpoint at
+            http://localhost:4566</div>
+          <div class="flex items-start gap-2"><span class="text-slate-600">[15:01:14]</span> <span
+              class="text-emerald-400 font-bold">[OPTIMAL]</span> Active Scan: 0 routing configuration anomalies
+            identified across network target vectors.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW CONTAINER 2: SECURITY INCIDENTS (FULLY IMPLEMENTED TAB) -->
+    <div id="view-issues" class="view-panel p-8 space-y-6">
+      <div class="glow-card p-6 rounded-2xl">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-base font-bold text-white">Security Incident Queue</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Historical and real-time ledger tracking active infrastructure
+              drift threats.</p>
+          </div>
+          <span id="queueCount" class="bg-emerald-500/10 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold">0
+            Active Alerts</span>
+        </div>
+
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left text-xs text-slate-400">
+            <thead
+              class="bg-slate-900/50 text-slate-300 uppercase tracking-wider text-[10px] border-b border-slate-800">
+              <tr>
+                <th class="p-4">Incident ID</th>
+                <th class="p-4">Target Resource</th>
+                <th class="p-4">Drift Classification</th>
+                <th class="p-4">Timestamp</th>
+                <th class="p-4">Status</th>
+              </tr>
+            </thead>
+            <tbody id="incidentsTableBody" class="divide-y divide-slate-900">
+              <tr id="emptyRowPlaceholder">
+                <td colspan="5" class="p-8 text-center text-slate-500 font-medium">
+                  <i class="fa-solid fa-circle-check text-emerald-500 text-lg mb-2 block"></i>
+                  Excellent! Cloud configuration perfectly matches target state infrastructure requirements.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW CONTAINER 3: INFRASTRUCTURE LEDGER (FULLY IMPLEMENTED TAB) -->
+    <div id="view-files" class="view-panel p-8 space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left File Structure Grid -->
+        <div class="lg:col-span-2 glow-card p-6 rounded-2xl">
+          <h3 class="text-base font-bold text-white mb-4">Core Python Application Blueprint</h3>
+          <div class="space-y-3 font-mono text-xs">
+            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-900 flex items-center justify-between">
+              <span class="text-purple-400 font-semibold"><i class="fa-brands fa-python mr-2"></i>
+                security/boundary_remediator.py</span>
+              <span class="text-[10px] text-slate-500">Boto3 Remediation Logic</span>
+            </div>
+            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-900 flex items-center justify-between">
+              <span class="text-indigo-400 font-semibold"><i class="fa-brands fa-python mr-2"></i>
+                security/engine_config.py</span>
+              <span class="text-[10px] text-slate-500">Compliance Baseline Constants</span>
+            </div>
+            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-900 flex items-center justify-between">
+              <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-code mr-2"></i>
+                monitoring-dashboard/index.html</span>
+              <span class="text-[10px] text-slate-500">Live Executive Ops Dashboard</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live SCP Rule Container -->
+        <div class="glow-card p-6 rounded-2xl flex flex-col justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-white mb-3">Enforced Service Control Policy</h3>
+            <p class="text-xs text-slate-400 leading-relaxed mb-4">Immutable structural rules evaluating AWS resource
+              boundaries.</p>
+            <pre
+              class="bg-[#030406] p-4 rounded-xl text-[11px] font-mono text-emerald-400 border border-slate-900 overflow-x-auto leading-5">
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Deny",
+    "Action": "ec2:CreateRoute",
+    "Condition": {
+      "StringLike": {
+        "ec2:CidrBlock": "0.0.0.0/0"
+      }
+    }
+  }]
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CORE INTERACTIVE JS CODE FOR DYNAMIC MATRIX -->
+  <script>
+    // Tab switching controller
+    function switchView(viewId, tabButton) {
+      document.querySelectorAll('#sidebarMenu button').forEach(btn => btn.classList.remove('active-tab'));
+      document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active-view'));
+
+      tabButton.classList.add('active-tab');
+      document.getElementById(`view-${viewId}`).classList.add('active-view');
+    }
+
+    // High Quality Trend Chart
+    const canvasCtx = document.getElementById('enterpriseChart').getContext('2d');
+    let enterpriseChart = new Chart(canvasCtx, {
+      type: 'line',
+      data: {
+        labels: ['12s ago', '10s ago', '8s ago', '6s ago', '4s ago', '2s ago', 'Now'],
+        datasets: [{
+          data: [0, 0, 0, 0, 0, 0, 0],
+          borderColor: '#a855f7',
+          backgroundColor: 'rgba(168, 85, 247, 0.03)',
+          tension: 0.38,
+          fill: true,
+          borderWidth: 2.5,
+          pointRadius: 1,
+          pointHoverRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 10 } } },
+          y: { min: 0, max: 6, grid: { color: 'rgba(255,255,255,0.01)' }, ticks: { color: '#475569', stepSize: 1, font: { size: 10 } } }
+        }
+      }
+    });
+
+    // Logger utility
+    function appendLiveLog(message, statusType = "info") {
+      const logsContainer = document.getElementById('liveLogs');
+      const currentTime = new Date().toLocaleTimeString();
+      let statusBadge = `<span class="text-indigo-400 font-bold">[ENGINE_INFO]</span>`;
+
+      if (statusType === "error") statusBadge = `<span class="text-rose-500 font-bold">[DRIFT_BREACH]</span>`;
+      if (statusType === "success") statusBadge = `<span class="text-emerald-400 font-bold">[HEAL_COMPLETE]</span>`;
+
+      logsContainer.innerHTML += `<div class="flex items-start gap-2 animate-[fadeIn_0.3s_ease]"><span class="text-slate-600">[${currentTime}]</span> ${statusBadge} ${message}</div>`;
+      logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+
+    // Action 1: Simulation Breach Vector
+    function triggerDriftBreach() {
+      // Update Global Alerts Headers
+      document.getElementById('globalStatus').className = "bg-rose-500/10 border border-rose-500/20 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all";
+      document.getElementById('globalStatus').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_12px_#f43f5e] animate-ping"></span> INTRUSION DRIFT ALARM ACTIVE`;
+
+      // Update Core Project Analytics Metrics
+      document.getElementById('metricIntegrity').innerText = "33.3%";
+      document.getElementById('metricIntegrity').className = "text-4xl font-extrabold text-rose-500 mt-3 tracking-tight transition-all";
+
+      // Increment Navigation Indicators
+      document.getElementById('incidentBadge').innerText = "1";
+      document.getElementById('incidentBadge').className = "ml-auto bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-md font-bold animate-bounce";
+      document.getElementById('queueCount').innerText = "1 Active Security Breach Alert";
+      document.getElementById('queueCount').className = "bg-rose-500/10 text-rose-400 text-xs px-3 py-1 rounded-full font-bold";
+
+      // Populate the Security Incidents Table dynamically
+      document.getElementById('incidentsTableBody').innerHTML = `
+                <tr class="hover:bg-slate-900/30 transition-colors">
+                    <td class="p-4 font-mono text-purple-400 font-semibold">INC-2026-8873</td>
+                    <td class="p-4 font-mono text-slate-300">rtb-9e353773</td>
+                    <td class="p-4"><span class="bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded text-[10px] font-bold border border-rose-500/10">UNAUTHORIZED_PUBLIC_ROUTE</span></td>
+                    <td class="p-4 text-slate-500">${new Date().toLocaleTimeString()}</td>
+                    <td class="p-4 text-rose-400 font-bold flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span> UNREMEDIATED</td>
+                </tr>`;
+
+      // Spurt chart plot values up
+      enterpriseChart.data.datasets[0].data = [0, 0, 0, 0, 0, 5, 5];
+      enterpriseChart.update();
+
+      appendLiveLog("CRITICAL CONFIGURATION DRIFT: Public gateway egress route attached to rtb-9e353773 payload block tracking '0.0.0.0/0'.", "error");
+    }
+
+    // Action 2: Self Healing Engine Trigger Execution
+    function triggerAutonomicHeal() {
+      appendLiveLog("Deploying thread framework for ec2:DeleteRoute execution against routing gateway targets...", "info");
+
+      setTimeout(() => {
+        // Restore Status Elements
+        document.getElementById('globalStatus').className = "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all";
+        document.getElementById('globalStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]"></span> SYSTEM BASELINE: COMPLIANT`;
+
+        document.getElementById('metricIntegrity').innerText = "100% ";
+        document.getElementById('metricIntegrity').className = "text-4xl font-extrabold text-white mt-3 tracking-tight transition-all";
+        document.getElementById('metricLatency').innerText = "382ms";
+
+        // Clear out alert triggers safely
+        document.getElementById('incidentBadge').innerText = "0";
+        document.getElementById('incidentBadge').className = "ml-auto bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded-md font-bold";
+        document.getElementById('queueCount').innerText = "0 Active Alerts";
+        document.getElementById('queueCount').className = "bg-emerald-500/10 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold";
+
+        // Update row logs cleanly to prove it handled it
+        document.getElementById('incidentsTableBody').innerHTML = `
+                    <tr class="hover:bg-slate-900/30 transition-colors opacity-60">
+                        <td class="p-4 font-mono text-slate-500 line-through">INC-2026-8873</td>
+                        <td class="p-4 font-mono text-slate-500">rtb-9e353773</td>
+                        <td class="p-4"><span class="bg-slate-800 text-slate-400 px-2 py-0.5 rounded text-[10px] border border-slate-700">RESOLVED_AUTO</span></td>
+                        <td class="p-4 text-slate-500">${new Date().toLocaleTimeString()}</td>
+                        <td class="p-4 text-emerald-400 font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> ISOLATED & REMEDIATED</td>
+                    </tr>`;
+
+        // Ease out chart visualization trends down
+        enterpriseChart.data.datasets[0].data = [0, 0, 0, 5, 5, 1, 0];
+        enterpriseChart.update();
+
+        appendLiveLog("Autonomous synchronization successful. Injected public baseline route deleted. Infrastructure baseline matches design criteria.", "success");
+      }, 850);
+    }
+  </script>
+</body>
+
+</html>

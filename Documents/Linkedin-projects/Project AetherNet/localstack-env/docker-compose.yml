@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  localstack:
+    container_name: aethernet-localstack
+    image: localstack/localstack:2.3
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,ec2,cloudwatch,iam
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "./localstack_data:/var/lib/localstack"

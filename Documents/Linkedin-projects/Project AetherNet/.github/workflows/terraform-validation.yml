@@ -1,0 +1,30 @@
+name: Terraform Validation
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Check Format
+        run: terraform -chdir=terraform-infra fmt -check
+
+      - name: Initialize Parent Configuration
+        run: terraform -chdir=terraform-infra init -backend=false
+
+      - name: Validate Parent Configuration
+        run: terraform -chdir=terraform-infra validate
